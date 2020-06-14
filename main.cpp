@@ -4,11 +4,13 @@
 #include <QApplication>
 #include <QPushButton>
 #include <QBoxLayout>
+#include <QStatusBar>
 
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow w;
+    w.statusBar()->hide();
 
     QWidget *centralWidget = new QWidget;
     QVBoxLayout *layout = new QVBoxLayout(centralWidget);
