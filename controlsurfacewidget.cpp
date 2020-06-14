@@ -1,4 +1,4 @@
-#include "controlsurfacewidget.h"
+﻿#include "controlsurfacewidget.h"
 
 #include <QSvgWidget>
 #include <QFile>
@@ -8,11 +8,11 @@
 #include <QPainter>
 
 struct ControlSurfaceWidgetItem {
-    QRect refGeometry;
+    QRectF refGeometry;
     QPushButton *control;
 };
 
-ControlSurfaceWidget::ControlSurfaceWidget(QWidget *parent, int refWidth, int refHeight)
+ControlSurfaceWidget::ControlSurfaceWidget(QWidget *parent, float refWidth, float refHeight)
     : QWidget(parent)
     , m_bgRenderer(nullptr)
 {
@@ -48,10 +48,10 @@ void ControlSurfaceWidget::setBackgroundSvg(const QString &file)
     m_bgRenderer->setAspectRatioMode(Qt::AspectRatioMode::IgnoreAspectRatio);
 }
 
-void ControlSurfaceWidget::addControl(int refX, int refY, int refWidth, int refHeight)
+void ControlSurfaceWidget::addControl(float refX, float refY, float refWidth, float refHeight)
 {
     ControlSurfaceWidgetItem item = {
-        .refGeometry = QRect(refX, refY, refWidth, refHeight),
+        .refGeometry = QRectF(refX, refY, refWidth, refHeight),
         .control = new QPushButton(this)
     };
 
@@ -69,8 +69,8 @@ void ControlSurfaceWidget::resizeEvent(QResizeEvent *event)
     const float newAspect = (float) rect.height() / rect.width();
 
     // Offsets to be applied to every child widget
-    int xOffset = 0;
-    int yOffset = 0;
+    float xOffset = 0;
+    float yOffset = 0;
 
     float scaleFactor;
     if (newAspect < m_refAspect) {
@@ -89,15 +89,15 @@ void ControlSurfaceWidget::resizeEvent(QResizeEvent *event)
     // Apply the new geometry
     for (auto &item: qAsConst(m_controls)) {
         QRect newGeom;
-        const QRect g = item.refGeometry;
+        const QRectF g = item.refGeometry;
 
-        int x = g.x() * scaleFactor + xOffset;
-        int y = g.y() * scaleFactor + yOffset;
+        int x = qRound(g.x() * scaleFactor + xOffset);
+        int y = qRound(g.y() * scaleFactor + yOffset);
         newGeom.setX(x);
         newGeom.setY(y);
 
-        int width = qRound((float) g.width() * scaleFactor);
-        int height = qRound((float) g.height() * scaleFactor);
+        int width = qRound(g.width() * scaleFactor);
+        int height = qRound(g.height() * scaleFactor);
         newGeom.setWidth(width);
         newGeom.setHeight(height);
 

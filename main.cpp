@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     QVBoxLayout *layout = new QVBoxLayout(centralWidget);
     centralWidget->setLayout(layout);
 
-    ControlSurfaceWidget *surface = new ControlSurfaceWidget(centralWidget, 236, 199);
+    ControlSurfaceWidget *surface = new ControlSurfaceWidget(centralWidget, 236.f, 199.f);
     layout->addWidget(surface);
 
     ///////////////////////////////////////////////////////////
