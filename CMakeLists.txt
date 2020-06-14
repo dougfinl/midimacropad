@@ -11,7 +11,7 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Svg Widgets REQUIRED)
 
 add_executable(midicontroller
     main.cpp
@@ -22,4 +22,4 @@ add_executable(midicontroller
     controlsurfacewidget.cpp
     )
 
-target_link_libraries(midicontroller PRIVATE Qt5::Widgets)
+target_link_libraries(midicontroller PRIVATE Qt5::Svg Qt5::Widgets)

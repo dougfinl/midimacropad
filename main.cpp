@@ -50,6 +50,8 @@ int main(int argc, char *argv[])
         surface->addControl(x, 145, 19, 50);
     }
 
+    surface->setBackgroundSvg("assets/akai_apcmini.svg");
+
     w.setCentralWidget(centralWidget);
     w.show();
 

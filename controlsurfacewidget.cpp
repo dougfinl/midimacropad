@@ -1,6 +1,11 @@
 #include "controlsurfacewidget.h"
 
+#include <QSvgWidget>
+#include <QFile>
+#include <QMimeDatabase>
+#include <QMimeType>
 #include <QDebug>
+#include <QPainter>
 
 struct ControlSurfaceWidgetItem {
     QRect refGeometry;
@@ -9,6 +14,7 @@ struct ControlSurfaceWidgetItem {
 
 ControlSurfaceWidget::ControlSurfaceWidget(QWidget *parent, int refWidth, int refHeight)
     : QWidget(parent)
+    , m_bgRenderer(nullptr)
 {
     m_refSize = QSize(refWidth, refHeight);
     m_refAspect = (float) refHeight / refWidth;
@@ -16,6 +22,30 @@ ControlSurfaceWidget::ControlSurfaceWidget(QWidget *parent, int refWidth, int re
 
 ControlSurfaceWidget::~ControlSurfaceWidget()
 {
+    delete m_bgRenderer;
+}
+
+void ControlSurfaceWidget::setBackgroundSvg(const QString &file)
+{
+    QMimeDatabase db;
+    QMimeType type = db.mimeTypeForFile(file);
+    if (type.name() != "image/svg+xml") {
+        qDebug("[ERROR] file is not an SVG");
+        return;
+    }
+
+    if (m_bgRenderer)
+        delete m_bgRenderer;
+
+    // Read the SVG from file
+    QFile svgFile(file);
+    if (!svgFile.open(QIODevice::ReadOnly)) {
+        qDebug("[ERROR] could not read SVG file");
+        return;
+    }
+    m_bgRenderer = new QSvgRenderer(svgFile.readAll(), this);
+    svgFile.close();
+    m_bgRenderer->setAspectRatioMode(Qt::AspectRatioMode::IgnoreAspectRatio);
 }
 
 void ControlSurfaceWidget::addControl(int refX, int refY, int refWidth, int refHeight)
@@ -72,5 +102,18 @@ void ControlSurfaceWidget::resizeEvent(QResizeEvent *event)
         newGeom.setHeight(height);
 
         item.control->setGeometry(newGeom);
+    }
+
+    // Set the background's bounds
+    m_bgRect = QRectF(xOffset, yOffset, m_refSize.width() * scaleFactor, m_refSize.height() * scaleFactor);
+}
+
+void ControlSurfaceWidget::paintEvent(QPaintEvent *event)
+{
+    QWidget::paintEvent(event);
+
+    if (m_bgRenderer) {
+        QPainter painter(this);
+        m_bgRenderer->render(&painter, m_bgRect);
     }
 }
