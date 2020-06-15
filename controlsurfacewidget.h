@@ -12,6 +12,9 @@ class ControlSurfaceWidget : public QWidget
 {
     Q_OBJECT
 public:
+    static ControlSurfaceWidget *fromJSONFile(const QString &file);
+    static ControlSurfaceWidget *fromJSONData(const QByteArray &json, const QString &workingDir = "");
+
     explicit ControlSurfaceWidget(QWidget *parent = nullptr, float refWidth = 100.f, float refHeight = 100.f);
     ~ControlSurfaceWidget();
 

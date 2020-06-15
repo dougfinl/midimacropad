@@ -6,6 +6,11 @@
 #include <QMimeType>
 #include <QDebug>
 #include <QPainter>
+#include <QJsonObject>
+#include <QJsonDocument>
+#include <QJsonArray>
+#include <QFileInfo>
+#include <QDir>
 
 struct ControlSurfaceWidgetItem {
     QRectF refGeometry;
@@ -23,6 +28,74 @@ ControlSurfaceWidget::ControlSurfaceWidget(QWidget *parent, float refWidth, floa
 ControlSurfaceWidget::~ControlSurfaceWidget()
 {
     delete m_bgRenderer;
+}
+
+ControlSurfaceWidget *ControlSurfaceWidget::fromJSONFile(const QString &file)
+{
+    QMimeDatabase db;
+    QMimeType type = db.mimeTypeForFile(file);
+    if (type.name() != "application/json") {
+        qDebug() << "[ERROR] file does not contain JSON data";
+        return nullptr;
+    }
+
+    QFile jsonFile(file);
+    if (!jsonFile.open(QFile::ReadOnly | QFile::Text)) {
+        qDebug() << "[ERROR] failed to open " << file;
+        return nullptr;
+    }
+    QByteArray fileData = jsonFile.readAll();
+    jsonFile.close();
+
+    QString workingDir = QFileInfo(jsonFile).dir().absolutePath();
+
+    return ControlSurfaceWidget::fromJSONData(fileData, workingDir);
+}
+
+ControlSurfaceWidget *ControlSurfaceWidget::fromJSONData(const QByteArray &data, const QString &workingDir)
+{
+    ControlSurfaceWidget *surface = nullptr;
+
+    QJsonParseError err;
+    QJsonDocument jsonDoc = QJsonDocument::fromJson(data, &err);
+    if (jsonDoc.isNull()) {
+        qDebug() << "[ERROR] failed to parse JSON data";
+        return nullptr;
+    }
+
+    QJsonObject root = jsonDoc.object();
+
+    QString manufacturer = root["manufacturer"].toString();
+    QString model = root["model"].toString();
+
+    qDebug().noquote() << "[INFO] loading controller:" << manufacturer << "-" << model;
+
+    float surfaceWidth = root["width"].toVariant().toFloat();
+    float surfaceHeight = root["height"].toVariant().toFloat();
+    surface = new ControlSurfaceWidget(nullptr, surfaceWidth, surfaceHeight);
+
+    QString backgroundFileName = root["background"].toString();
+    QString backgroundFilePath = QDir(workingDir).absoluteFilePath(backgroundFileName);
+    surface->setBackgroundSvg(backgroundFilePath);
+
+    QJsonArray controlsList = root["controls"].toArray();
+    for (const auto &controlJSON : controlsList) {
+        QJsonObject obj = controlJSON.toObject();
+
+        QString id = obj["id"].toString();
+        QString type = obj["type"].toString();
+
+        if (type == "push_button") {
+            QJsonObject geometry = obj["geometry"].toObject();
+            float x      = geometry["x"].toVariant().toFloat();
+            float y      = geometry["y"].toVariant().toFloat();
+            float width  = geometry["width"].toVariant().toFloat();
+            float height = geometry["height"].toVariant().toFloat();
+            surface->addControl(x, y, width, height);
+        }
+    }
+
+    return surface;
 }
 
 void ControlSurfaceWidget::setBackgroundSvg(const QString &file)
